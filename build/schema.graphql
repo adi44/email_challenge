@@ -1,0 +1,6 @@
+type Message @entity {
+  id: ID!
+  to: String! # address
+  from: String! # address
+  data: String! # transaction_hash
+}

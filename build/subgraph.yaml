@@ -1,0 +1,24 @@
+specVersion: 0.0.2
+schema:
+  file: schema.graphql
+dataSources:
+  - kind: ethereum/contract
+    name: Email
+    network: mumbai
+    source:
+      address: "0x14ab884aa4Dd0CdDDBC9e14D22aa460960283bCa"
+      abi: Email
+      startBlock: 23444160
+    mapping:
+      kind: ethereum/events
+      apiVersion: 0.0.5
+      language: wasm/assemblyscript
+      entities:
+        - Msg_Recieved
+      abis:
+        - name: Email
+          file: Email/abis/Email.json
+      eventHandlers:
+        - event: Msg_Recieved(address,address,bytes,uint256)
+          handler: handleMsg_Recieved
+      file: Email/Email.wasm
