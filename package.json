@@ -4,7 +4,7 @@
   "scripts": {
     "codegen": "graph codegen",
     "build": "graph build",
-    "deploy": "graph deploy --node https://api.thegraph.com/deploy/ adi44/email_subgraph",
+    "deploy": "graph deploy --node https://api.thegraph.com/deploy/ adi44/email",
     "create-local": "graph create --node http://localhost:8020/ adi44/email_subgraph",
     "remove-local": "graph remove --node http://localhost:8020/ adi44/email_subgraph",
     "deploy-local": "graph deploy --node http://localhost:8020/ --ipfs http://localhost:5001 adi44/email_subgraph"
