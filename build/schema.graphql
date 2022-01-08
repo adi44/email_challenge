@@ -3,4 +3,5 @@ type Message @entity {
   to: String! # address
   from: String! # address
   data: String! # transaction_hash
+  timestamp:BigInt! #timestamp
 }

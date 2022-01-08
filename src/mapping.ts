@@ -17,6 +17,7 @@ export function handleMsg_Recieved(event: Msg_Recieved): void {
     message.to = event.params.to.toHex();
     message.from = event.params.from.toHex();
     message.data = event.params.data.toHex();
+    message.timestamp = event.block.timestamp;
   }
 
   message.save()

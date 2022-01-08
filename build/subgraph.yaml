@@ -6,7 +6,7 @@ dataSources:
     name: Email
     network: mumbai
     source:
-      address: "0x2Ca6b08bdE01fBf281bc3AbCbF6633D538AAbF80"
+      address: "0xd2492cAeeC25e931f099697b3ae1De19D187bB01"
       abi: Email
       startBlock: 23444160
     mapping:

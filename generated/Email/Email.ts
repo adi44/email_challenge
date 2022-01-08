@@ -40,6 +40,26 @@ export class Msg_Recieved__Params {
   }
 }
 
+export class Email__messagesResult {
+  value0: Address;
+  value1: Address;
+  value2: Bytes;
+
+  constructor(value0: Address, value1: Address, value2: Bytes) {
+    this.value0 = value0;
+    this.value1 = value1;
+    this.value2 = value2;
+  }
+
+  toMap(): TypedMap<string, ethereum.Value> {
+    let map = new TypedMap<string, ethereum.Value>();
+    map.set("value0", ethereum.Value.fromAddress(this.value0));
+    map.set("value1", ethereum.Value.fromAddress(this.value1));
+    map.set("value2", ethereum.Value.fromBytes(this.value2));
+    return map;
+  }
+}
+
 export class Email extends ethereum.SmartContract {
   static bind(address: Address): Email {
     return new Email("Email", address);
@@ -58,6 +78,63 @@ export class Email extends ethereum.SmartContract {
     }
     let value = result.value;
     return ethereum.CallResult.fromValue(value[0].toBigInt());
+  }
+
+  messages(param0: Address, param1: BigInt): Email__messagesResult {
+    let result = super.call(
+      "messages",
+      "messages(address,uint256):(address,address,bytes)",
+      [
+        ethereum.Value.fromAddress(param0),
+        ethereum.Value.fromUnsignedBigInt(param1)
+      ]
+    );
+
+    return new Email__messagesResult(
+      result[0].toAddress(),
+      result[1].toAddress(),
+      result[2].toBytes()
+    );
+  }
+
+  try_messages(
+    param0: Address,
+    param1: BigInt
+  ): ethereum.CallResult<Email__messagesResult> {
+    let result = super.tryCall(
+      "messages",
+      "messages(address,uint256):(address,address,bytes)",
+      [
+        ethereum.Value.fromAddress(param0),
+        ethereum.Value.fromUnsignedBigInt(param1)
+      ]
+    );
+    if (result.reverted) {
+      return new ethereum.CallResult();
+    }
+    let value = result.value;
+    return ethereum.CallResult.fromValue(
+      new Email__messagesResult(
+        value[0].toAddress(),
+        value[1].toAddress(),
+        value[2].toBytes()
+      )
+    );
+  }
+
+  owner(): Address {
+    let result = super.call("owner", "owner():(address)", []);
+
+    return result[0].toAddress();
+  }
+
+  try_owner(): ethereum.CallResult<Address> {
+    let result = super.tryCall("owner", "owner():(address)", []);
+    if (result.reverted) {
+      return new ethereum.CallResult();
+    }
+    let value = result.value;
+    return ethereum.CallResult.fromValue(value[0].toAddress());
   }
 
   recievers(param0: Address): boolean {
@@ -95,6 +172,10 @@ export class RegisterCall__Inputs {
 
   constructor(call: RegisterCall) {
     this._call = call;
+  }
+
+  get reciever(): Address {
+    return this._call.inputValues[0].value.toAddress();
   }
 }
 

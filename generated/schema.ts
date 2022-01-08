@@ -20,6 +20,7 @@ export class Message extends Entity {
     this.set("to", Value.fromString(""));
     this.set("from", Value.fromString(""));
     this.set("data", Value.fromString(""));
+    this.set("timestamp", Value.fromBigInt(BigInt.zero()));
   }
 
   save(): void {
@@ -73,5 +74,14 @@ export class Message extends Entity {
 
   set data(value: string) {
     this.set("data", Value.fromString(value));
+  }
+
+  get timestamp(): BigInt {
+    let value = this.get("timestamp");
+    return value!.toBigInt();
+  }
+
+  set timestamp(value: BigInt) {
+    this.set("timestamp", Value.fromBigInt(value));
   }
 }
