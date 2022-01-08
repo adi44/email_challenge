@@ -16,7 +16,7 @@ import { encrypt } from "@metamask/eth-sig-util";
 import { uploadToIPFS } from "./utils";
 import Messages from "./components/Messages";
 
-const contractAddress = "0x58eB271221B674F7dB793103D280231768ec04Be";
+const contractAddress = "0xd2492caeec25e931f099697b3ae1de19d187bb01";
 
 function App() {
   const [isMetamaskConnected, setIsMetamaskConnected] = useState(false);
@@ -28,6 +28,7 @@ function App() {
     address: "",
     message: "",
   });
+  const [userPublicKey, setUserPublicKey] = useState(null);
 
   const { data, loading } = useQuery(FETCH_MESSAGES, {
     variables: { to: address?.toLowerCase() },
@@ -47,9 +48,14 @@ function App() {
       const signer = provider.getSigner();
       const contract = new ethers.Contract(contractAddress, Email.abi, signer);
       const currentAddress = await signer.getAddress();
-      const isUserRegistered = await contract.recievers(currentAddress);
+      const userPubKey = await contract.recievers(currentAddress);
 
-      setIsRegistered(isUserRegistered);
+      if (userPubKey === "0x") {
+        setIsRegistered(false);
+      } else {
+        setUserPublicKey(ethers.utils.toUtf8String(userPubKey));
+        setIsRegistered(true);
+      }
     } catch (error) {
       console.log(error);
     }
@@ -131,8 +137,17 @@ function App() {
     try {
       const provider = new ethers.providers.Web3Provider(ethereum);
       const signer = provider.getSigner();
+      const currentAddress = await signer.getAddress();
+
       const contract = new ethers.Contract(contractAddress, Email.abi, signer);
-      const tx = await contract.register();
+      const encryptionPublicKey = await ethereum.request({
+        method: "eth_getEncryptionPublicKey",
+        params: [currentAddress],
+      });
+
+      const tx = await contract.register(
+        ethers.utils.toUtf8Bytes(encryptionPublicKey)
+      );
       console.log(tx);
       await tx.wait();
       checkIfRegistered();
@@ -162,22 +177,17 @@ function App() {
     try {
       const provider = new ethers.providers.Web3Provider(ethereum);
       const signer = provider.getSigner();
-      const currentAddress = await signer.getAddress();
+      const contract = new ethers.Contract(contractAddress, Email.abi, signer);
+      let recieverPubKey = await contract.recievers(formInput.address);
       let dataToUpload = {};
 
-      const isRecipientRegistered = await checkIfRecipientIsRegistered();
-      console.log("isRecipientRegistered:", isRecipientRegistered);
-      if (isRecipientRegistered) {
-        const encryptionPublicKey = await ethereum.request({
-          method: "eth_getEncryptionPublicKey",
-          params: [currentAddress],
-        });
-
+      if (recieverPubKey !== "0x") {
+        recieverPubKey = ethers.utils.toUtf8String(recieverPubKey);
         const encryptedMessage = bufferToHex(
           Buffer.from(
             JSON.stringify(
               encrypt({
-                publicKey: encryptionPublicKey,
+                publicKey: recieverPubKey,
                 data: formInput.message,
                 version: "x25519-xsalsa20-poly1305",
               })
@@ -201,7 +211,6 @@ function App() {
       console.log(dataToUpload);
 
       const uploadedData = await uploadToIPFS(JSON.stringify(dataToUpload));
-      const contract = new ethers.Contract(contractAddress, Email.abi, signer);
       const txn = await contract.sendMessage(
         formInput.address,
         ethers.utils.toUtf8Bytes(uploadedData.path)
@@ -233,19 +242,25 @@ function App() {
         <Messages messages={messages} />
       )}
 
-      {isMetamaskConnected &&
-        isMetamaskInstalled &&
-        (isRegistered ? (
-          <MessageForm
-            formInput={formInput}
-            setFormInput={setFormInput}
-            sendMessage={sendMessage}
-          />
-        ) : (
-          <Button variant="primary" onClick={register}>
-            Register
-          </Button>
-        ))}
+      {isMetamaskConnected && isMetamaskInstalled && (
+        <MessageForm
+          formInput={formInput}
+          setFormInput={setFormInput}
+          sendMessage={sendMessage}
+        />
+      )}
+
+      {isMetamaskConnected && isMetamaskInstalled && !isRegistered && (
+        <Button
+          variant="primary"
+          onClick={register}
+          style={{
+            marginTop: "16px",
+          }}
+        >
+          Register
+        </Button>
+      )}
 
       {isMetamaskInstalled && !isMetamaskConnected && (
         <Connect connect={connect} />

@@ -4,6 +4,10 @@ import moment from "moment";
 import { ethers } from "ethers";
 import { fetchFromIPFS } from "../utils";
 
+import Email from "../abi/Email.json";
+
+const contractAddress = "0xd2492caeec25e931f099697b3ae1de19d187bb01";
+
 const Message = ({ message }) => {
   const [text, setText] = useState(null);
 
@@ -20,8 +24,7 @@ const Message = ({ message }) => {
         params: [encryptedMessage, currentAddress],
       });
 
-      console.log("decryptedMessage");
-      console.log(decryptedMessage);
+      setText(decryptedMessage);
     } catch (error) {
       console.log(error);
     }
@@ -37,6 +40,7 @@ const Message = ({ message }) => {
         decryptMessage(messageData.message);
       } else {
         console.log(messageData.message);
+        setText(messageData.message);
       }
     } catch (error) {
       console.log("Error occured while opening message");
@@ -49,12 +53,15 @@ const Message = ({ message }) => {
       <Card>
         <Card.Body>
           <Card.Text>From: {message.from}</Card.Text>
+          <Card.Title>{text}</Card.Title>
           <Card.Text>
             On:
             {moment.unix(message.timestamp).format("MMM-DD-YYYY hh:mm:ss A")}(
             {moment(message.timestamp * 1000).fromNow()})
           </Card.Text>
-          <Button onClick={openMessage}>Open Message</Button>
+          <Button onClick={openMessage} disabled={text !== null}>
+            Open Message
+          </Button>
         </Card.Body>
       </Card>
     </div>
