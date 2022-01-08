@@ -16,7 +16,7 @@ import { encrypt } from "@metamask/eth-sig-util";
 import { uploadToIPFS } from "./utils";
 import Messages from "./components/Messages";
 
-const contractAddress = "0x2Ca6b08bdE01fBf281bc3AbCbF6633D538AAbF80";
+const contractAddress = "0x58eB271221B674F7dB793103D280231768ec04Be";
 
 function App() {
   const [isMetamaskConnected, setIsMetamaskConnected] = useState(false);
@@ -90,7 +90,7 @@ function App() {
   }, []);
 
   useEffect(() => {
-    console.log("data");
+    console.log("data 123");
     console.log(data);
   }, [data]);
 
