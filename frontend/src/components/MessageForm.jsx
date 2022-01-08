@@ -3,11 +3,7 @@ import { Form, Button } from "react-bootstrap";
 const MessageForm = ({ formInput, setFormInput, sendMessage }) => {
   return (
     <div className="email-form" onSubmit={sendMessage}>
-      <Form
-        style={{
-          padding: "0 20%",
-        }}
-      >
+      <Form>
         <Form.Group className="mb-3" controlId="formBasicEmail">
           <Form.Label>To</Form.Label>
           <Form.Control

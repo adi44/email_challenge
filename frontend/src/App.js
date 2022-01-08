@@ -8,7 +8,7 @@ import "./App.css";
 import { useQuery } from "@apollo/client";
 import { FETCH_MESSAGES } from "./utils/queries";
 import Email from "./abi/Email.json";
-import { Button } from "react-bootstrap";
+import { Button, Alert, Spinner } from "react-bootstrap";
 import MessageForm from "./components/MessageForm";
 import { Buffer } from "buffer";
 import { bufferToHex } from "ethereumjs-util";
@@ -28,7 +28,8 @@ function App() {
     address: "",
     message: "",
   });
-  const [userPublicKey, setUserPublicKey] = useState(null);
+  const [showMsgSuccess, setShowMsgSuccess] = useState(false);
+  const [txStatus, setTxStatus] = useState(null);
 
   const { data, loading } = useQuery(FETCH_MESSAGES, {
     variables: { to: address?.toLowerCase() },
@@ -53,7 +54,6 @@ function App() {
       if (userPubKey === "0x") {
         setIsRegistered(false);
       } else {
-        setUserPublicKey(ethers.utils.toUtf8String(userPubKey));
         setIsRegistered(true);
       }
     } catch (error) {
@@ -94,11 +94,6 @@ function App() {
       setIsMetamaskInstalled(false);
     }
   }, []);
-
-  useEffect(() => {
-    console.log("data 123");
-    console.log(data);
-  }, [data]);
 
   // Listens for network or accounts
   useEffect(() => {
@@ -156,32 +151,37 @@ function App() {
     }
   };
 
-  const checkIfRecipientIsRegistered = async () => {
-    const { ethereum } = window;
-    try {
-      console.log("Checking recipient");
-      const provider = new ethers.providers.Web3Provider(ethereum);
-      const signer = provider.getSigner();
-      const contract = new ethers.Contract(contractAddress, Email.abi, signer);
-      const isRecipientRegistered = await contract.recievers(formInput.address);
-      return isRecipientRegistered;
-    } catch (error) {
-      console.log(error);
-      return false;
-    }
-  };
+  // const checkIfRecipientIsRegistered = async () => {
+  //   const { ethereum } = window;
+  //   try {
+  //     console.log("Checking recipient");
+  //     const provider = new ethers.providers.Web3Provider(ethereum);
+  //     const signer = provider.getSigner();
+  //     const contract = new ethers.Contract(contractAddress, Email.abi, signer);
+  //     const isRecipientRegistered = await contract.recievers(formInput.address);
+  //     return isRecipientRegistered;
+  //   } catch (error) {
+  //     console.log(error);
+  //     return false;
+  //   }
+  // };
 
   const sendMessage = async (e) => {
     e.preventDefault();
+    setShowMsgSuccess(null);
+    setTxStatus(null);
+
     const { ethereum } = window;
     try {
       const provider = new ethers.providers.Web3Provider(ethereum);
       const signer = provider.getSigner();
       const contract = new ethers.Contract(contractAddress, Email.abi, signer);
+      setTxStatus("Fetching if reciever is registered");
       let recieverPubKey = await contract.recievers(formInput.address);
       let dataToUpload = {};
 
       if (recieverPubKey !== "0x") {
+        setTxStatus("Reciver is registered. Encrypting message!");
         recieverPubKey = ethers.utils.toUtf8String(recieverPubKey);
         const encryptedMessage = bufferToHex(
           Buffer.from(
@@ -201,6 +201,7 @@ function App() {
           isEncrypted: true,
         };
       } else {
+        setTxStatus("Reciver is not registered. Saving it as plain text!");
         dataToUpload = {
           message: formInput.message,
           isEncrypted: false,
@@ -210,17 +211,19 @@ function App() {
       console.log("dataToUpload");
       console.log(dataToUpload);
 
+      setTxStatus("Uploading data to IPFS");
       const uploadedData = await uploadToIPFS(JSON.stringify(dataToUpload));
+      setTxStatus("Uploaded data to IPFS");
       const txn = await contract.sendMessage(
         formInput.address,
         ethers.utils.toUtf8Bytes(uploadedData.path)
       );
-      console.log("Sending txn");
+      setTxStatus("Sending txn");
       console.log(txn);
       await txn.wait();
-      console.log("Txn mined");
+      setTxStatus("Txn mined");
       console.log(txn);
-
+      setShowMsgSuccess(true);
       console.log("🎉 Message sent!!!");
     } catch (error) {
       console.log(error);
@@ -248,6 +251,18 @@ function App() {
           setFormInput={setFormInput}
           sendMessage={sendMessage}
         />
+      )}
+      {showMsgSuccess ? (
+        <Alert variant="success" style={{ marginTop: "16px" }}>
+          🎉 Message sent successfully{" "}
+        </Alert>
+      ) : (
+        txStatus && (
+          <>
+            <Spinner animation="border" />
+            <span>{txStatus}</span>
+          </>
+        )
       )}
 
       {isMetamaskConnected && isMetamaskInstalled && !isRegistered && (
