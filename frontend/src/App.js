@@ -14,6 +14,7 @@ import { Buffer } from "buffer";
 import { bufferToHex } from "ethereumjs-util";
 import { encrypt } from "@metamask/eth-sig-util";
 import { uploadToIPFS } from "./utils";
+import Messages from "./components/Messages";
 
 const contractAddress = "0x2Ca6b08bdE01fBf281bc3AbCbF6633D538AAbF80";
 
@@ -228,10 +229,8 @@ function App() {
       <h2>Email challenge</h2>
       {loading ? (
         <h3>Fetching messages...</h3>
-      ) : messages.length ? (
-        <h3>You have {messages.length} messages</h3>
       ) : (
-        <h3>You don't have any messages</h3>
+        <Messages messages={messages} />
       )}
 
       {isMetamaskConnected &&

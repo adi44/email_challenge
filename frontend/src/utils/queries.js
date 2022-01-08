@@ -7,6 +7,7 @@ export const FETCH_MESSAGES = gql`
       to
       from
       data
+      timestamp
     }
   }
 `;
