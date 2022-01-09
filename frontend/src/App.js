@@ -10,10 +10,7 @@ import { FETCH_MESSAGES } from "./utils/queries";
 import Email from "./abi/Email.json";
 import { Button, Alert, Spinner } from "react-bootstrap";
 import MessageForm from "./components/MessageForm";
-import { Buffer } from "buffer";
-import { bufferToHex } from "ethereumjs-util";
-import { encrypt } from "@metamask/eth-sig-util";
-import { uploadToIPFS } from "./utils";
+import { getEncryptedMessage, uploadToIPFS } from "./utils";
 import Messages from "./components/Messages";
 
 const contractAddress = "0xd2492caeec25e931f099697b3ae1de19d187bb01";
@@ -183,17 +180,9 @@ function App() {
       if (recieverPubKey !== "0x") {
         setTxStatus("Reciver is registered. Encrypting message!");
         recieverPubKey = ethers.utils.toUtf8String(recieverPubKey);
-        const encryptedMessage = bufferToHex(
-          Buffer.from(
-            JSON.stringify(
-              encrypt({
-                publicKey: recieverPubKey,
-                data: formInput.message,
-                version: "x25519-xsalsa20-poly1305",
-              })
-            ),
-            "utf8"
-          )
+        const encryptedMessage = getEncryptedMessage(
+          recieverPubKey,
+          formInput.message
         );
 
         dataToUpload = {
@@ -226,7 +215,6 @@ function App() {
       setShowMsgSuccess(true);
       console.log("🎉 Message sent!!!");
     } catch (error) {
-      console.log(error);
       if (error.code === 4001) {
         // Show alert that user declined for publicKey
         console.log("We can't encrypt anything without the key.");
@@ -239,11 +227,6 @@ function App() {
   return (
     <div className="App">
       <h2>Email challenge</h2>
-      {loading ? (
-        <h3>Fetching messages...</h3>
-      ) : (
-        <Messages messages={messages} />
-      )}
 
       {isMetamaskConnected && isMetamaskInstalled && (
         <MessageForm
@@ -275,6 +258,12 @@ function App() {
         >
           Register
         </Button>
+      )}
+
+      {loading ? (
+        <h3>Fetching messages...</h3>
+      ) : (
+        <Messages messages={messages} />
       )}
 
       {isMetamaskInstalled && !isMetamaskConnected && (

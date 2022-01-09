@@ -4,10 +4,6 @@ import moment from "moment";
 import { ethers } from "ethers";
 import { fetchFromIPFS } from "../utils";
 
-import Email from "../abi/Email.json";
-
-const contractAddress = "0xd2492caeec25e931f099697b3ae1de19d187bb01";
-
 const Message = ({ message }) => {
   const [text, setText] = useState(null);
 
@@ -49,7 +45,12 @@ const Message = ({ message }) => {
   };
 
   return (
-    <div className="message">
+    <div
+      className="message"
+      style={{
+        marginTop: "10px",
+      }}
+    >
       <Card>
         <Card.Body>
           <Card.Text>From: {message.from}</Card.Text>
