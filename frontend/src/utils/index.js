@@ -3,6 +3,7 @@ import axios from "axios";
 import { bufferToHex } from "ethereumjs-util";
 import { encrypt } from "@metamask/eth-sig-util";
 import { Buffer } from "buffer";
+import { ethers } from "ethers";
 
 const client = ipfsHttpClient("https://ipfs.infura.io:5001/api/v0");
 
@@ -46,4 +47,6 @@ const getEncryptedMessage = (publicKey, message) => {
   }
 };
 
-export { uploadToIPFS, fetchFromIPFS, getEncryptedMessage };
+const isValidAddress = (address) => ethers.utils.isAddress(address);
+
+export { uploadToIPFS, fetchFromIPFS, getEncryptedMessage, isValidAddress };

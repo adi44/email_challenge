@@ -13,6 +13,7 @@ const MessageForm = ({ formInput, setFormInput, sendMessage }) => {
               setFormInput({ ...formInput, address: e.target.value })
             }
             value={formInput.address}
+            required
           />
         </Form.Group>
 
@@ -26,6 +27,7 @@ const MessageForm = ({ formInput, setFormInput, sendMessage }) => {
               setFormInput({ ...formInput, message: e.target.value })
             }
             value={formInput.message}
+            required
           />
         </Form.Group>
         <Button variant="primary" type="submit">

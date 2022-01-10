@@ -12,6 +12,7 @@ import { Button, Alert, Spinner } from "react-bootstrap";
 import MessageForm from "./components/MessageForm";
 import { getEncryptedMessage, uploadToIPFS } from "./utils";
 import Messages from "./components/Messages";
+import { isValidAddress } from "ethereumjs-util";
 
 const contractAddress = "0xd2492caeec25e931f099697b3ae1de19d187bb01";
 
@@ -27,6 +28,7 @@ function App() {
   });
   const [showMsgSuccess, setShowMsgSuccess] = useState(false);
   const [txStatus, setTxStatus] = useState(null);
+  const [alertMsg, setAlertMsg] = useState(null);
 
   const { data, loading } = useQuery(FETCH_MESSAGES, {
     variables: { to: address?.toLowerCase() },
@@ -167,53 +169,62 @@ function App() {
     e.preventDefault();
     setShowMsgSuccess(null);
     setTxStatus(null);
+    setAlertMsg(null);
 
-    const { ethereum } = window;
     try {
-      const provider = new ethers.providers.Web3Provider(ethereum);
-      const signer = provider.getSigner();
-      const contract = new ethers.Contract(contractAddress, Email.abi, signer);
-      setTxStatus("Fetching if reciever is registered");
-      let recieverPubKey = await contract.recievers(formInput.address);
-      let dataToUpload = {};
-
-      if (recieverPubKey !== "0x") {
-        setTxStatus("Reciver is registered. Encrypting message!");
-        recieverPubKey = ethers.utils.toUtf8String(recieverPubKey);
-        const encryptedMessage = getEncryptedMessage(
-          recieverPubKey,
-          formInput.message
-        );
-
-        dataToUpload = {
-          message: encryptedMessage,
-          isEncrypted: true,
-        };
+      if (!isValidAddress(formInput.address)) {
+        setAlertMsg("Invalid Ethereum address");
       } else {
-        setTxStatus("Reciver is not registered. Saving it as plain text!");
-        dataToUpload = {
-          message: formInput.message,
-          isEncrypted: false,
-        };
+        const { ethereum } = window;
+        const provider = new ethers.providers.Web3Provider(ethereum);
+        const signer = provider.getSigner();
+        const contract = new ethers.Contract(
+          contractAddress,
+          Email.abi,
+          signer
+        );
+        setTxStatus("Fetching if reciever is registered");
+        let recieverPubKey = await contract.recievers(formInput.address);
+        let dataToUpload = {};
+
+        if (recieverPubKey !== "0x") {
+          setTxStatus("Reciver is registered. Encrypting message!");
+          recieverPubKey = ethers.utils.toUtf8String(recieverPubKey);
+          const encryptedMessage = getEncryptedMessage(
+            recieverPubKey,
+            formInput.message
+          );
+
+          dataToUpload = {
+            message: encryptedMessage,
+            isEncrypted: true,
+          };
+        } else {
+          setTxStatus("Reciver is not registered. Saving it as plain text!");
+          dataToUpload = {
+            message: formInput.message,
+            isEncrypted: false,
+          };
+        }
+
+        console.log("dataToUpload");
+        console.log(dataToUpload);
+
+        setTxStatus("Uploading data to IPFS");
+        const uploadedData = await uploadToIPFS(JSON.stringify(dataToUpload));
+        setTxStatus("Uploaded data to IPFS");
+        const txn = await contract.sendMessage(
+          formInput.address,
+          ethers.utils.toUtf8Bytes(uploadedData.path)
+        );
+        setTxStatus("Sending txn");
+        console.log(txn);
+        await txn.wait();
+        setTxStatus("Txn mined");
+        console.log(txn);
+        setShowMsgSuccess(true);
+        console.log("🎉 Message sent!!!");
       }
-
-      console.log("dataToUpload");
-      console.log(dataToUpload);
-
-      setTxStatus("Uploading data to IPFS");
-      const uploadedData = await uploadToIPFS(JSON.stringify(dataToUpload));
-      setTxStatus("Uploaded data to IPFS");
-      const txn = await contract.sendMessage(
-        formInput.address,
-        ethers.utils.toUtf8Bytes(uploadedData.path)
-      );
-      setTxStatus("Sending txn");
-      console.log(txn);
-      await txn.wait();
-      setTxStatus("Txn mined");
-      console.log(txn);
-      setShowMsgSuccess(true);
-      console.log("🎉 Message sent!!!");
     } catch (error) {
       if (error.code === 4001) {
         // Show alert that user declined for publicKey
@@ -229,11 +240,23 @@ function App() {
       <h2>Email challenge</h2>
 
       {isMetamaskConnected && isMetamaskInstalled && (
-        <MessageForm
-          formInput={formInput}
-          setFormInput={setFormInput}
-          sendMessage={sendMessage}
-        />
+        <>
+          <MessageForm
+            formInput={formInput}
+            setFormInput={setFormInput}
+            sendMessage={sendMessage}
+          />
+          {alertMsg && (
+            <Alert
+              variant="danger"
+              style={{
+                marginTop: "12px",
+              }}
+            >
+              {alertMsg}
+            </Alert>
+          )}
+        </>
       )}
       {showMsgSuccess ? (
         <Alert variant="success" style={{ marginTop: "16px" }}>
