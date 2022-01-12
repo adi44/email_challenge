@@ -9,3 +9,7 @@ Rinkeby Smart contract Address
 
 https://rinkeby.etherscan.io/address/0xA4a4078bE4FF3ECd634d11C2D607A1E068F19Ec6
 
+Rinkeby Subgraph Playground
+
+https://api.thegraph.com/subgraphs/name/adi44/emailrinkeby
+
