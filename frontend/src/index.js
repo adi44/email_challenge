@@ -7,7 +7,7 @@ import App from "./App";
 import reportWebVitals from "./reportWebVitals";
 
 const client = new ApolloClient({
-  uri: "https://api.thegraph.com/subgraphs/name/adi44/email",
+  uri: "https://api.thegraph.com/subgraphs/name/adi44/emailrinkeby",
   cache: new InMemoryCache(),
 });
 

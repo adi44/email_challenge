@@ -14,7 +14,7 @@ import { getEncryptedMessage, uploadToIPFS } from "./utils";
 import Messages from "./components/Messages";
 import { isValidAddress } from "ethereumjs-util";
 
-const contractAddress = "0xd2492caeec25e931f099697b3ae1de19d187bb01";
+const contractAddress = "0xA4a4078bE4FF3ECd634d11C2D607A1E068F19Ec6";
 
 function App() {
   const [isMetamaskConnected, setIsMetamaskConnected] = useState(false);
